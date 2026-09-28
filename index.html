@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#176b3a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.svg" type="image/svg+xml">
+<title>Poultry Farm Manager</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7f5;color:#17321f;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:#176b3a;color:#fff;padding:15px 16px;position:sticky;top:0;z-index:20}
+h1,h2,h3,p{margin-top:0}header h1{margin:0;font-size:21px}header small{opacity:.9}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+nav{display:flex;gap:7px;overflow-x:auto;background:#fff;padding:9px;position:sticky;top:67px;z-index:19;border-bottom:1px solid #ddd;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}nav button{flex:0 0 auto;border:0;border-radius:20px;padding:9px 13px;background:#edf2ef;font-size:14px}
+nav button.active{background:#176b3a;color:#fff}
+main{max-width:1000px;margin:auto;padding:14px}.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{background:#fff;border-radius:15px;padding:15px;margin-bottom:12px;box-shadow:0 2px 9px rgba(0,0,0,.07)}
+.stat{font-size:24px;font-weight:800;margin-top:4px}.muted{font-size:13px;color:#6b776f}
+.notice{background:#eaf6ee;border:1px solid #d1ead9;padding:11px;border-radius:11px;margin-bottom:12px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #ccd5ce;border-radius:9px;font:inherit;margin:0 0 8px}textarea{min-height:70px}
+button.primary{background:#176b3a;color:#fff;border:0;border-radius:9px;padding:11px 14px;font-weight:700}
+button.secondary{background:#edf2ee;color:#17321f;border:0;border-radius:9px;padding:10px 12px}
+button.danger{background:#b42318;color:#fff;border:0;border-radius:7px;padding:6px 8px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px;border-bottom:1px solid #e4e9e5;white-space:nowrap}
+.scroll{overflow:auto}.row{display:flex;gap:8px;align-items:center;justify-content:space-between}.badge{background:#eef3ef;padding:4px 8px;border-radius:15px;font-size:12px}
+.auth{max-width:430px;margin:55px auto}.hidden{display:none!important}
+.kpi{border-left:4px solid #176b3a}.reportline{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #e7ebe8}
+canvas{display:block;width:100%;height:230px;border:1px solid #e8ece9;border-radius:10px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:420px){main{padding:10px}.card{padding:13px}.stat{font-size:21px}}
+@media print{header,nav,.no-print{display:none!important}body{background:white}.page{display:none}.page.active{display:block}.card{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<div id="auth" class="auth card">
+<h2>🐔 Poultry Farm Manager</h2><p class="muted">Manage your farm from your phone.</p>
+<div id="loginBox"><h3>Sign in</h3><input id="le" type="email" placeholder="Email"><input id="lp" type="password" placeholder="Password"><button class="primary" onclick="login()">Sign in</button><p style="margin-top:12px">New farmer? <button class="secondary" onclick="toggleAuth(false)">Create account</button></p></div>
+<div id="signupBox" class="hidden"><h3>Create account</h3><input id="se" type="email" placeholder="Email"><input id="sp" type="password" placeholder="Password"><button class="primary" onclick="signup()">Create account</button><p style="margin-top:12px">Already registered? <button class="secondary" onclick="toggleAuth(true)">Sign in</button></p></div>
+<p id="authMsg" class="muted"></p>
+</div>
+
+<div id="app" class="hidden">
+<header><div class="top"><div><h1>🐔 Poultry Farm Manager</h1><small id="farmTitle">My Poultry Farm</small></div><div style="display:flex;gap:6px"><button id="installBtn" class="secondary hidden" onclick="installApp()">Install</button><button class="secondary" onclick="logout()">Logout</button></div></div></header>
+<nav id="nav">
+<button class="active" data-page="dashboard">Dashboard</button><button data-page="flocks">Flocks</button><button data-page="eggs">Eggs</button><button data-page="feed">Feed</button><button data-page="mortality">Mortality</button><button data-page="sales">Sales</button><button data-page="expenses">Expenses</button><button data-page="inventory">Inventory</button><button data-page="reports">Reports</button>
+</nav>
+<main>
+<section id="dashboard" class="page active">
+<div class="notice">☁️ <b>Cloud sync active.</b> Your farm records are stored in your account.</div>
+<div class="grid">
+<div class="card kpi"><div class="muted">Birds Remaining</div><div id="dBirds" class="stat">0</div></div>
+<div class="card kpi"><div class="muted">Eggs Today</div><div id="dEggs" class="stat">0</div></div>
+<div class="card kpi"><div class="muted">Sales</div><div id="dSales" class="stat">GH₵0.00</div></div>
+<div class="card kpi"><div class="muted">Expenses</div><div id="dExp" class="stat">GH₵0.00</div></div>
+</div>
+<div class="grid">
+<div class="card"><div class="muted">Deaths</div><div id="dMort" class="stat">0</div></div>
+<div class="card"><div class="muted">Feed Used</div><div id="dFeed" class="stat">0 kg</div></div>
+<div class="card"><div class="muted">Feed Stock</div><div id="dStock" class="stat">0 kg</div></div>
+<div class="card"><div class="muted">Net Cash</div><div id="dNet" class="stat">GH₵0.00</div></div>
+</div>
+</section>
+
+<section id="flocks" class="page"><div class="card"><h2>🐔 Flocks</h2><form onsubmit="add('flocks',flockPayload(),event)"><input id="fn" placeholder="Batch name" required><input id="fb" placeholder="Breed"><input id="fc" type="number" min="0" placeholder="Initial birds" required><input id="fd" type="date" required><button class="primary">Add flock</button></form></div><div class="card"><div id="flockTable" class="scroll"></div></div></section>
+
+<section id="eggs" class="page"><div class="card"><h2>🥚 Egg Collection</h2><form onsubmit="add('egg_records',eggPayload(),event)"><input id="ed" type="date" required><input id="ec" type="number" min="0" placeholder="Eggs collected" required><input id="eb" type="number" min="0" placeholder="Broken eggs"><textarea id="en" placeholder="Notes"></textarea><button class="primary">Save egg record</button></form></div><div class="card"><div id="eggTable" class="scroll"></div></div></section>
+
+<section id="feed" class="page"><div class="card"><h2>🌾 Feed Usage</h2><form onsubmit="add('feed_records',feedPayload(),event)"><input id="qdate" type="date" required><input id="qt" placeholder="Feed type" required><input id="qq" type="number" step=".01" min="0" placeholder="Quantity used (kg)" required><input id="qcost" type="number" step=".01" min="0" placeholder="Cost GH₵"><button class="primary">Save usage</button></form></div><div class="card"><div id="feedTable" class="scroll"></div></div></section>
+
+<section id="mortality" class="page"><div class="card"><h2>💀 Mortality</h2><form onsubmit="add('mortality_records',mortPayload(),event)"><input id="md" type="date" required><input id="mq" type="number" min="1" placeholder="Number of deaths" required><input id="mc" placeholder="Cause"><textarea id="mn" placeholder="Notes"></textarea><button class="primary">Save mortality</button></form></div><div class="card"><div id="mortTable" class="scroll"></div></div></section>
+
+<section id="sales" class="page"><div class="card"><h2>💰 Sales</h2><form onsubmit="add('sales',salePayload(),event)"><input id="sd" type="date" required><select id="st"><option>Eggs</option><option>Birds</option><option>Manure</option><option>Other</option></select><input id="sq" type="number" min="0" step=".01" placeholder="Quantity"><input id="sa" type="number" min="0" step=".01" placeholder="Amount GH₵" required><input id="sc" placeholder="Customer"><button class="primary">Save sale</button></form></div><div class="card"><div id="salesTable" class="scroll"></div></div></section>
+
+<section id="expenses" class="page"><div class="card"><h2>💸 Expenses</h2><form onsubmit="add('expenses',expensePayload(),event)"><input id="xd" type="date" required><input id="xt" placeholder="Feed, medicine, labour..." required><input id="xa" type="number" min="0" step=".01" placeholder="Amount GH₵" required><input id="xn" placeholder="Note"><button class="primary">Save expense</button></form></div><div class="card"><div id="expenseTable" class="scroll"></div></div></section>
+
+<section id="inventory" class="page">
+<div class="card"><h2>🌾 Feed Stock</h2><form onsubmit="add('feed_stock',stockPayload(),event)"><input id="stockType" placeholder="Feed type" required><input id="stockQty" type="number" min="0" step=".01" placeholder="Quantity purchased (kg)" required><input id="stockCost" type="number" min="0" step=".01" placeholder="Total cost GH₵"><input id="stockSupplier" placeholder="Supplier"><input id="stockDate" type="date"><button class="primary">Add feed stock</button></form></div>
+<div class="card"><h2>💊 Medicines / Vaccines</h2><form onsubmit="add('medicine_records',medicinePayload(),event)"><input id="medName" placeholder="Medicine / vaccine" required><input id="medQty" placeholder="Quantity"><input id="medPurpose" placeholder="Purpose"><input id="medDate" type="date"><input id="medCost" type="number" min="0" step=".01" placeholder="Cost GH₵"><input id="medNotes" placeholder="Notes"><button class="primary">Save medicine record</button></form></div>
+<div class="card"><h2>🚚 Suppliers</h2><form onsubmit="add('suppliers',supplierPayload(),event)"><input id="supName" placeholder="Supplier name" required><input id="supPhone" placeholder="Phone"><input id="supItem" placeholder="Supplies"><input id="supNotes" placeholder="Notes"><button class="primary">Add supplier</button></form></div>
+<div class="card"><div id="inventoryTables"></div></div>
+</section>
+
+<section id="reports" class="page"><div class="card"><div class="row"><h2>📊 Farm Reports</h2><button class="secondary no-print" onclick="window.print()">Print</button></div><div id="report"></div></div><div class="card"><h3>Monthly Net Cash</h3><canvas id="chart" width="900" height="240"></canvas></div></section>
+</main></div>
+
+<script>
+const URL="https://mbuhamqfafcmpgddyari.supabase.co";
+const KEY="sb_publishable_0yhcHVCJeaRkztTR09iUow_Gs-dx-pi";
+let access="",user=null,farm=null,db={flocks:[],eggs:[],feed:[],mortality:[],sales:[],expenses:[],feed_stock:[],medicine_records:[],suppliers:[]};
+const $=id=>document.getElementById(id), today=()=>new Date().toISOString().slice(0,10);
+["fd","ed","qdate","md","sd","xd","stockDate","medDate"].forEach(id=>$(id).value=today());
+
+function toggleAuth(login){$("loginBox").classList.toggle("hidden",!login);$("signupBox").classList.toggle("hidden",login);$("authMsg").textContent=""}
+function say(x){$("authMsg").textContent=x}
+async function auth(path,body){let r=await fetch(URL+path,{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify(body)});let j=await r.json();if(!r.ok)throw Error(j.error_description||j.msg||"Request failed");return j}
+async function signup(){try{let j=await auth("/auth/v1/signup",{email:$("se").value,password:$("sp").value});say(j.access_token?"Account created.":"Account created. Check your email, then sign in.");if(j.access_token){access=j.access_token;user=j.user;start()}}catch(e){say(e.message)}}
+async function login(){try{let j=await auth("/auth/v1/token?grant_type=password",{email:$("le").value,password:$("lp").value});access=j.access_token;user=j.user;localStorage.setItem("pf_session",JSON.stringify({access,user}));start()}catch(e){say(e.message)}}
+function logout(){localStorage.removeItem("pf_session");location.reload()}
+async function api(path,opts={}){let r=await fetch(URL+"/rest/v1/"+path,{...opts,headers:{apikey:KEY,Authorization:"Bearer "+access,"Content-Type":"application/json",Prefer:"return=representation",...(opts.headers||{})}});if(!r.ok)throw Error(await r.text());return r.status===204?null:r.json()}
+async function start(){$("auth").classList.add("hidden");$("app").classList.remove("hidden");await ensureFarm();await load()}
+async function ensureFarm(){let a=await api("farms?select=*&owner_id=eq."+encodeURIComponent(user.id));if(!a.length)a=await api("farms",{method:"POST",body:JSON.stringify({owner_id:user.id,name:"My Poultry Farm"})});farm=a[0];$("farmTitle").textContent=farm.name}
+async function load(){let id=farm.id;try{let names=["flocks","egg_records","feed_records","mortality_records","sales","expenses","feed_stock","medicine_records","suppliers"];let vals=await Promise.all(names.map(t=>api(t+"?select=*&farm_id=eq."+id+"&order=created_at.desc")));names.forEach((n,i)=>db[n==="egg_records"?"eggs":n==="feed_records"?"feed":n==="mortality_records"?"mortality":n]=vals[i]);render()}catch(e){alert("Cloud database error: "+e.message)}}
+async function add(table,obj,e){e.preventDefault();try{await api(table,{method:"POST",body:JSON.stringify({...obj,farm_id:farm.id})});e.target.reset();["fd","ed","qdate","md","sd","xd","stockDate","medDate"].forEach(id=>$(id).value=today());await load()}catch(x){alert("Could not save: "+x.message)}}
+async function del(table,id){if(confirm("Delete this record?")){try{await api(table+"?id=eq."+id,{method:"DELETE"});await load()}catch(e){alert(e.message)}}}
+function flockPayload(){return{name:$("fn").value,breed:$("fb").value,initial_birds:+$("fc").value,arrival_date:$("fd").value}}
+function eggPayload(){return{record_date:$("ed").value,collected:+$("ec").value,broken:+$("eb").value||0,notes:$("en").value}}
+function feedPayload(){return{record_date:$("qdate").value,feed_type:$("qt").value,quantity_kg:+$("qq").value,cost:+$("qcost").value||0}}
+function mortPayload(){return{record_date:$("md").value,quantity:+$("mq").value,cause:$("mc").value,notes:$("mn").value}}
+function salePayload(){return{sale_date:$("sd").value,sale_type:$("st").value,quantity:+$("sq").value||0,amount:+$("sa").value,customer:$("sc").value}}
+function expensePayload(){return{expense_date:$("xd").value,expense_type:$("xt").value,amount:+$("xa").value,note:$("xn").value}}
+function stockPayload(){return{feed_type:$("stockType").value,quantity_kg:+$("stockQty").value,unit_cost:+$("stockCost").value||0,supplier:$("stockSupplier").value,purchase_date:$("stockDate").value}}
+function medicinePayload(){return{medicine_name:$("medName").value,quantity:$("medQty").value,purpose:$("medPurpose").value,date_used:$("medDate").value,cost:+$("medCost").value||0,notes:$("medNotes").value}}
+function supplierPayload(){return{name:$("supName").value,phone:$("supPhone").value,item:$("supItem").value,notes:$("supNotes").value}}
+function money(x){return"GH₵"+Number(x||0).toFixed(2)}
+function table(id,heads,rows,tableName){$(id).innerHTML=rows.length?`<table><tr>${heads.map(h=>"<th>"+h+"</th>").join("")}<th></th></tr>`+rows.map(r=>`<tr>${r.cells.map(x=>"<td>"+(x??"")+"</td>").join("")}<td><button class=danger onclick="del('${tableName}','${r.id}')">Delete</button></td></tr>`).join("")+"</table>":"<p class=muted>No records yet.</p>"}
+function render(){
+let deaths=db.mortality.reduce((a,x)=>a+ +x.quantity,0),initial=db.flocks.reduce((a,x)=>a+ +x.initial_birds,0),birds=Math.max(0,initial-deaths),sales=db.sales.reduce((a,x)=>a+ +x.amount,0),exp=db.expenses.reduce((a,x)=>a+ +x.amount,0),feed=db.feed.reduce((a,x)=>a+ +x.quantity_kg,0),stock=db.feed_stock.reduce((a,x)=>a+ +x.quantity_kg,0),eggs=db.eggs.filter(x=>x.record_date===today()).reduce((a,x)=>a+ +x.collected,0);
+$("dBirds").textContent=birds;$("dEggs").textContent=eggs;$("dSales").textContent=money(sales);$("dExp").textContent=money(exp);$("dMort").textContent=deaths;$("dFeed").textContent=feed.toFixed(2)+" kg";$("dStock").textContent=stock.toFixed(2)+" kg";$("dNet").textContent=money(sales-exp);
+table("flockTable",["Batch","Breed","Birds","Arrival"],db.flocks.map(x=>({id:x.id,cells:[x.name,x.breed||"",x.initial_birds,x.arrival_date||""]})),"flocks");
+table("eggTable",["Date","Collected","Broken"],db.eggs.map(x=>({id:x.id,cells:[x.record_date,x.collected,x.broken]})),"egg_records");
+table("feedTable",["Date","Type","Kg","Cost"],db.feed.map(x=>({id:x.id,cells:[x.record_date,x.feed_type,x.quantity_kg,money(x.cost)]})),"feed_records");
+table("mortTable",["Date","Deaths","Cause"],db.mortality.map(x=>({id:x.id,cells:[x.record_date,x.quantity,x.cause||""]})),"mortality_records");
+table("salesTable",["Date","Type","Qty","Amount","Customer"],db.sales.map(x=>({id:x.id,cells:[x.sale_date,x.sale_type,x.quantity,money(x.amount),x.customer||""]})),"sales");
+table("expenseTable",["Date","Type","Amount","Note"],db.expenses.map(x=>({id:x.id,cells:[x.expense_date,x.expense_type,money(x.amount),x.note||""]})),"expenses");
+$("inventoryTables").innerHTML="";
+let d=document.createElement("div");d.innerHTML="<h3>Feed Purchases</h3>";$("inventoryTables").appendChild(d);
+let t=document.createElement("div");t.className="scroll";t.innerHTML=db.feed_stock.length?`<table><tr><th>Feed</th><th>Kg</th><th>Supplier</th><th>Date</th></tr>${db.feed_stock.map(x=>`<tr><td>${x.feed_type}</td><td>${x.quantity_kg}</td><td>${x.supplier||""}</td><td>${x.purchase_date||""}</td></tr>`).join("")}</table>`:"<p class=muted>No feed stock purchases yet.</p>";$("inventoryTables").appendChild(t);
+let rate=initial?deaths/initial*100:0;$("report").innerHTML=`<div class=reportline><span>Birds remaining</span><b>${birds}</b></div><div class=reportline><span>Mortality rate</span><b>${rate.toFixed(2)}%</b></div><div class=reportline><span>Total eggs</span><b>${db.eggs.reduce((a,x)=>a+ +x.collected,0)}</b></div><div class=reportline><span>Feed used</span><b>${feed.toFixed(2)} kg</b></div><div class=reportline><span>Feed purchased</span><b>${stock.toFixed(2)} kg</b></div><div class=reportline><span>Sales</span><b>${money(sales)}</b></div><div class=reportline><span>Expenses</span><b>${money(exp)}</b></div><div class=reportline><span>Net cash</span><b>${money(sales-exp)}</b></div>`;drawChart()}
+function drawChart(){let c=$("chart"),x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);let m={};db.sales.forEach(r=>{let k=r.sale_date.slice(0,7);m[k]=(m[k]||0)+ +r.amount});db.expenses.forEach(r=>{let k=r.expense_date.slice(0,7);m[k]=(m[k]||0)- +r.amount});let a=Object.entries(m).sort().slice(-8);x.font="14px system-ui";if(!a.length){x.fillText("Add sales and expenses to see monthly cash flow.",20,35);return}let max=Math.max(...a.map(v=>Math.abs(v[1])),1);a.forEach((v,i)=>{let bx=50+i*105,h=Math.abs(v[1])/max*90;x.fillRect(bx,125-h,60,h);x.fillText(v[0],bx,145);x.fillText(Math.round(v[1]),bx,165)})}
+document.querySelectorAll("nav button[data-page]").forEach(b=>b.onclick=()=>{document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));$(b.dataset.page).classList.add("active");document.querySelectorAll("nav button[data-page]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
+let deferredInstall=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;document.getElementById("installBtn").classList.remove("hidden")});
+async function installApp(){if(!deferredInstall)return;deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;document.getElementById("installBtn").classList.add("hidden")}
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+try{let s=JSON.parse(localStorage.getItem("pf_session"));if(s){access=s.access;user=s.user;start()}}catch{}
+</script>
+</body></html>
